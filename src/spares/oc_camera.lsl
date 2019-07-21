@@ -65,6 +65,10 @@ integer g_iMenuStride=3;
 string UPMENU = "BACK";
 
 string g_sSettingToken = "camera_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
+
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -277,6 +281,8 @@ PermsCheck() {
 
 
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
@@ -378,8 +384,12 @@ default {
                     else if (~llSubStringIndex(g_sJsonModes, sToken)) CamMode(sToken);
                     g_iLastNum = (integer)sValue;
                 }
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 //got a menu response meant for us.  pull out values

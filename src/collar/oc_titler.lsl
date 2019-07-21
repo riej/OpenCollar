@@ -58,6 +58,9 @@ vector g_vPartSize = <0.3, 0.3, 0.0>;
 
 key g_kWearer;
 string g_sSettingToken = "titler_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
@@ -186,6 +189,8 @@ TitlerMenu(key kAv, integer iAuth) {
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
+
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sAction = llToLower(llList2String(lParams, 1));
@@ -341,7 +346,12 @@ default{
                 if(sToken == "particle") g_sParticle = sValue;
                 if(sToken == "particlesize") g_vPartSize = (vector)sValue;
             } else if( sStr == "settings=sent") ShowHideTitle();
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);

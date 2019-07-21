@@ -95,7 +95,9 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string g_sSettingToken = "bell_";
 integer g_iHasBellPrims;
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -208,6 +210,8 @@ PrepareSounds() {
 }
 
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+    
    // Debug("command: "+sStr);
     sStr = llToLower(sStr);
     if (sStr == "menu bell" || sStr == "bell" || sStr == g_sSubMenu)
@@ -293,6 +297,8 @@ default {
         else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
             UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
@@ -364,6 +370,8 @@ default {
                     g_iCurrentBellSound = (integer)sValue;
                     g_kCurrentBellSound = llList2Key(g_listBellSounds,g_iCurrentBellSound);
                 } else if (sToken == "vol") g_fVolume = (float)sValue/10;
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;

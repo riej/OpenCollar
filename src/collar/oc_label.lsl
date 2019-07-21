@@ -23,7 +23,9 @@ string g_sSubMenu = "Label";
 
 key g_kWearer;
 string g_sSettingToken = "label_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -358,6 +360,8 @@ FontMenu(key kID, integer iAuth) {
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
+    if (g_bStrictMode && iAuth == CMD_OWNER) return;
+
     string sLowerStr = llToLower(sStr);
     if (sStr == "rm label") {
         if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kAv);
@@ -456,10 +460,15 @@ default
                 else if (sToken == "scroll") g_iScroll = (integer)sValue;
             }
             else if (sToken == "settings" && sValue == "sent") SetLabel();
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_OWNER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);

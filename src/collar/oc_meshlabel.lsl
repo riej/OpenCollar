@@ -87,7 +87,9 @@ integer g_iHide;
 
 string g_sLabelText = "";
 string g_sSettingToken = "label_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 float Ureps;
 float Vreps;
@@ -265,6 +267,8 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
+
     //Debug("Command: "+sStr);
     string sLowerStr = llToLower(sStr);
      if (sStr == "rm label") {
@@ -366,10 +370,14 @@ default
             } else if (sToken == "settings" && sValue == "sent") {
                 SetColor();
                 SetLabel();
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);

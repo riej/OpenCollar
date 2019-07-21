@@ -287,6 +287,9 @@ list    g_lLocalButtons = []; // extra buttons that we get inserted "from above"
 
 list lSTATES = ["UNSET","DISARMED","ARMED","WARNING","TELEPORT","CAGED","RELEASED"];
 
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
@@ -659,6 +662,7 @@ integer CheckAuth(integer iAuth) {
 }
 
 UserCommand(integer iAuth, string sStr, key kID) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
     if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return;
 
     if (sStr=="menu "+g_sSubMenu || sStr==g_sSubMenu || sStr==g_sChatCmd) MenuMain(kID,iAuth);
@@ -807,10 +811,15 @@ default {
             else if (sToken == "cagehome_region") ParseRegion(sValue);
             else if (sToken == "cagehome_state") ParseState(sValue);
             else if (sStr == "settings=sent") CheckState();
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         } else if (iNum == CMD_SAFEWORD && g_iState == iCAGED) {
             SetState(iRELEASED);
             NotifyCaptiveChange(g_kCageOwnerKey, iRELEASED);
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex == -1) return;
             string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);

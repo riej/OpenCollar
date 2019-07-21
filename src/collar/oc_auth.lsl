@@ -91,7 +91,9 @@ integer g_iGrantRemoval;
 integer g_iFirstRun;
 
 string g_sSettingToken = "auth_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 /*integer g_iProfiled=1;
 Debug(string sStr) {
@@ -131,6 +133,10 @@ AuthMenu(key kAv, integer iAuth) {
     }
     string sPrompt = "\n[Access & Authorization]";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
+
+    if (g_bStrictMode && iAuth == CMD_WEARER) {
+        lButtons = [" ", " ", " ", " ", " ", " "];
+    }
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☑"];    //unset group
@@ -414,7 +420,11 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
         AuthMenu(kID, iNum);
-    } else if (sCommand == "add") { //add a person to a list
+    }
+
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
+    if (sCommand == "add") { //add a person to a list
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
@@ -569,6 +579,8 @@ default {
                 if(llGetSubString(sToken,i+1,-1)=="isActive"){
                     g_iCaptureIsActive=TRUE;
                 }
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if( iNum == LM_SETTING_DELETE){
             list lParams = llParseString2List(sStr, ["_"],[]);

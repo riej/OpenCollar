@@ -65,7 +65,9 @@ integer g_iIsEnabled=0;
 integer g_iHasSworn = FALSE;
 
 string g_sSettingToken = "badwords_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 /*
 integer g_iProfiled=1;
@@ -160,6 +162,8 @@ PermsCheck() {
 }
 
 UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     //Debug("Got command:"+sStr);
     sStr=llStringTrim(sStr,STRING_TRIM);
     list lParams = llParseString2List(sStr, [" "], []);
@@ -365,12 +369,16 @@ default {
                 else if (sToken == "sound") g_sBadWordSound = sValue;
                 else if (sToken == "words") g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                 else if (sToken == "penance") g_sPenance = sValue;
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
             if (sStr == "settings=sent") {
                 ListenControl();
                 llMessageLinked(LINK_ANIM, ANIM_LIST_REQUEST,"","");
             }
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);

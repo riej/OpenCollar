@@ -91,7 +91,9 @@ key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
 string g_sSettingToken = "leash_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 integer g_iPassConfirmed;
 integer g_iRezAuth;
@@ -404,6 +406,8 @@ YankTo(key kIn){
 }
 
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
+
     //llSay(0, sMessage+" ["+(string)kMessageID+"]");
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_NOACCESS) {
@@ -719,6 +723,8 @@ default {
                     g_iStrictRank = (integer)llList2String(lParam, 1);
                     ApplyRestrictions();
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;
@@ -727,6 +733,8 @@ default {
             g_iRLVOn = FALSE;
             ApplyRestrictions();
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);

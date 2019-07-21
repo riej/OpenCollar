@@ -100,6 +100,9 @@ key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 /*
 integer g_iProfiled;
@@ -253,6 +256,8 @@ PermsCheck() {
 
 
 UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
+
     if ((g_iOnRunning || g_iRealRunning) && kID == g_kWearer) {
         if (!llSubStringIndex(llToLower(sStr),"timer")) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You can't access here until the timer went off.",kID);
@@ -460,6 +465,8 @@ default {
             if (sToken == "global_locked") g_iCollarLocked=(integer)sValue;
             else if (sToken == "leash_leashedto") {
                 g_iWhoCanChangeLeash = (integer)llList2String(llParseString2List(sValue,[","],[]),1);
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             // our parent menu requested to receive buttons, so send ours
@@ -483,6 +490,8 @@ default {
                 if (~iIndex) g_lLocalMenu = llDeleteSubList(g_lLocalMenu, iIndex, iIndex);
             }
         } else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex == -1) return;
             //this is one of our menus

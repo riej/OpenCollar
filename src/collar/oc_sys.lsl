@@ -111,6 +111,7 @@ key g_kCurrentUser;
 
 list g_lAppsButtons;
 list g_lResizeButtons;
+list g_lRlvButtons;
 integer MVANIM_ANNOUNCE = 13001;
 
 integer g_iLocked = FALSE;
@@ -142,7 +143,7 @@ integer g_iUpdateFromMenu;
 key github_version_request;
 string g_sOtherDist;
 
-string g_sWeb = "https://raw.githubusercontent.com/riej/OpenCollar/master/web/";
+string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
@@ -160,6 +161,8 @@ string g_sGlobalToken = "global_";
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
+
+integer g_bStrictMode;
 
 integer compareVersions(string v1, string v2) { //compares two symantic version strings, true if v1 >= v2
     // For a collar running a non-release build (one with g_sDevStage set to not null) return TRUE 
@@ -206,6 +209,8 @@ SettingsMenu(key kID, integer iAuth) {
     else lButtons += [STEALTH_OFF];
     if (g_iLooks) lButtons += "Looks";
     else lButtons += "Themes";
+    if (g_bStrictMode) lButtons += "☑ Strict";
+    else lButtons += "☐ Strict";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Settings");
 }
 
@@ -234,23 +239,49 @@ MainMenu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar\t\t"+g_sCollarVersion;
     sPrompt += "\n\n[secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about Join the official OpenCollar group to become part of our community.]";
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new version has been released. You can obtain an updater from the OpenCollar group.";
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    list lStaticButtons=["Apps"];
-    if (g_iAnimsMenu) lStaticButtons+="Animations";
-    else lStaticButtons+="-";
-    if (g_iCaptureMenu) lStaticButtons+="Capture";
-    else lStaticButtons+="-";
-    lStaticButtons+=["Leash"];
-    if (g_iRlvMenu) lStaticButtons+="RLV";
-    else lStaticButtons+="-";
-    lStaticButtons+=["Access","Settings","Help/About"];
-    if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
-    else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
+
+    list lStaticButtons;
+
+    if (g_bStrictMode && iAuth == CMD_WEARER) {
+        lStaticButtons += "Access";
+
+        if (g_iAnimsMenu) lStaticButtons+="Animations";
+        else lStaticButtons += "-";
+        
+        if (g_iRlvMenu && ~llListFindList(g_lRlvButtons, ["# Folders"])) lStaticButtons += "# Folders";
+        else lStaticButtons += "-";
+    } else {
+        if (g_iLocked) lStaticButtons += "UNLOCK";
+        else lStaticButtons += "LOCK";
+
+        //Debug("max memory used: "+(string)llGetSPMaxMemory());
+        lStaticButtons += "Apps";
+        if (g_iAnimsMenu) lStaticButtons+="Animations";
+        else lStaticButtons+="-";
+        if (g_iCaptureMenu) lStaticButtons+="Capture";
+        else lStaticButtons+="-";
+        lStaticButtons+=["Leash"];
+        if (g_iRlvMenu) lStaticButtons+="RLV";
+        else lStaticButtons+="-";
+        lStaticButtons+=["Access","Settings","Help/About"];
+    }
+    
+    Dialog(kID, sPrompt, lStaticButtons, [], 0, iAuth, "Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llToLower(llList2String(lParams, 0));
+
+    if (g_bStrictMode && iNum == CMD_WEARER) {
+        if (sCmd == "menu") {
+            string sSubmenu = llToLower(llList2String(lParams, 1));
+            if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
+        }
+
+        return;
+    }
+
     if (sCmd == "menu") {
         string sSubmenu = llToLower(llList2String(lParams, 1));
         if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
@@ -296,7 +327,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             return;
         }
         //Debug("User command:"+sCmd);
-        if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
+        if (iNum == CMD_OWNER || (kID == g_kWearer && !g_bStrictMode)) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function
             g_iLocked = TRUE;
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"locked=1", "");
@@ -331,7 +362,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "update") {
-        if (kID == g_kWearer) {
+        if (iNum == CMD_OWNER || (kID == g_kWearer && !g_bStrictMode)) {
             g_iWillingUpdaters = 0;
             g_kCurrentUser = kID;
             g_iUpdateAuth = iNum;
@@ -342,7 +373,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             g_iWaitUpdate = TRUE;
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (!llSubStringIndex(sStr,".- ... -.-")) {
@@ -509,10 +540,12 @@ RebuildMenu(integer iRemenu, key kLastUser, integer iLastAuth) {
     g_iCaptureMenu=FALSE;
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
+    g_lRlvButtons = [];
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "RLV", "");
     llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
     
     if(iRemenu)
@@ -561,6 +594,12 @@ default {
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
             else if (sStr=="Main|Capture") g_iCaptureMenu=TRUE;
             else if (sStr=="Settings|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
+            else if (sName == "RLV") {
+                if (llListFindList(g_lRlvButtons, [sSubMenu]) == -1) {
+                    g_lRlvButtons += [sSubMenu];
+                    g_lRlvButtons = llListSort(g_lRlvButtons, 1, TRUE);
+                }
+            }
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
             list lParams = llParseString2List(sStr, ["|"], []);
@@ -638,6 +677,12 @@ default {
                     } else if (sMessage == "Looks") {
                         llMessageLinked(LINK_ROOT, iAuth, "looks",kAv);
                         return;
+                    } else if (sMessage == "☑ Strict") {
+                        g_bStrictMode = FALSE;
+                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "strict=" + (string)g_bStrictMode, "");
+                    } else if (sMessage == "☐ Strict") {
+                        g_bStrictMode = TRUE;
+                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "strict=" + (string)g_bStrictMode, "");
                     } else if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
                         return;
@@ -669,6 +714,8 @@ default {
             else if (sStr == "settings=sent") {
             } else if(sToken == "capture_isActive"){
                 g_iCaptureIsActive=TRUE;
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if(iNum == LM_SETTING_DELETE){
             if(sStr == "capture_isActive") g_iCaptureIsActive=FALSE;

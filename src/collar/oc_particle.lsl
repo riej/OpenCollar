@@ -91,9 +91,11 @@ list g_lLeashPrims;
 //global integer used for loops
 integer g_iLoop;
 string g_sSettingToken = "particle_";
-//string g_sGlobalToken = "global_";
-//Particle system and variables
+string g_sGlobalToken = "global_";
 
+integer g_bStrictMode;
+
+//Particle system and variables
 string g_sParticleTexture = "Silk";
 string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
 vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
@@ -313,6 +315,8 @@ SetTexture(string sIn, key kIn) {
 //Menus
 
 ConfigureMenu(key kIn, integer iAuth) {
+    if (g_bStrictMode && iAuth == CMD_WEARER) return;
+            
     list lButtons;
     if (g_iParticleGlow) lButtons += "☑ Shine";
     else lButtons += "☐ Shine";
@@ -413,6 +417,8 @@ default {
         } else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
             llMessageLinked(iSender, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
             if (~iMenuIndex) {
                 //Debug("Current menu:"+g_sCurrentMenu);
@@ -558,6 +564,8 @@ default {
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
                 }
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             } //else if (sToken == "strictAuthError") {
               //  g_iStrictMode = TRUE;
                 //ConfigureMenu(kMessageID, (integer)sValue);

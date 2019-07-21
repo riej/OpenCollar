@@ -169,6 +169,10 @@ list g_lLockedAttach; // list of locked attachmemts
 key g_kWearer;
 integer g_iAllLocked = 0;  //1=all clothes are locked on
 
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
+
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -376,6 +380,8 @@ PermsCheck() {
 
 UserCommand(integer iNum, string sStr, key kID)
 {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     if (iNum > CMD_WEARER || iNum < CMD_OWNER) return; // sanity check
     if (llToLower(sStr) == "rm undress" || llToLower(sStr) == "rm un/dress") {
         if (iNum == CMD_OWNER || kID == g_kWearer)
@@ -636,6 +642,9 @@ default {
                 UpdateSettings();
             }
             else if (sToken == "rlvundress_smartstrip") g_iSmartStrip=TRUE;
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
@@ -664,6 +673,8 @@ default {
         }
         else if (iNum == DIALOG_RESPONSE)
         {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex)
             {

@@ -84,6 +84,8 @@ string g_sGlobalToken = "global_";
 string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
+integer g_bStrictMode;
+
 list g_lOwners;
 list g_lRestrictions;  //2 strided list of sourceId, § separated list of restrictions strings
 //list g_lExceptions;
@@ -281,6 +283,8 @@ SafeWord(key kID) {
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     sStr = llToLower(sStr);
     if (sStr == "rlv" || sStr == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
@@ -394,6 +398,8 @@ default {
         }
         else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -444,6 +450,8 @@ default {
                 g_iRLVOn=(integer)sValue;
                 g_iRLVOff = !g_iRLVOn;
                 setRlvState();
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord("");
         else if (iNum==RLV_QUERY) {

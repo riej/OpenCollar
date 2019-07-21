@@ -21,7 +21,9 @@ list    g_lMenuIDs;
 integer g_iMenuStride = 3;
 
 //string g_sSettingToken                = "restrictions_";
-//string g_sGlobalToken                 = "global_";
+string g_sGlobalToken                 = "global_";
+
+integer g_bStrictMode;
 
 //restriction vars
 integer g_iSendRestricted;
@@ -333,6 +335,8 @@ string bool2string(integer iTest){
 }
 integer g_iTerminalAccess=12; // This is the bitset indicating what levels can access, or cannot access, the terminal. Default is only owner, trusted and wearer, see the link message section for a explanation of the bitset.
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     string sLowerStr=llToLower(sStr);
     //Debug(sStr);
     //outfits command handling
@@ -687,6 +691,8 @@ default {
                 else if (sToken=="restrictions_dazed")    g_iDazedRestricted=(integer)sValue;
             } else if(~llSubStringIndex(sToken, "terminal_")){
                 if(sToken == "terminal_accessbitset") g_iTerminalAccess=(integer)sValue;
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
         }
         else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID,FALSE);
@@ -706,6 +712,8 @@ default {
         else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
         else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) releaseRestrictions();
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);

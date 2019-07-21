@@ -108,6 +108,10 @@ integer g_iRLVOn=FALSE;
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
 
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
+
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -272,6 +276,8 @@ PermsCheck() {
 
 
 UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     if (iNum > CMD_WEARER) return;  //nothing for lower than wearer here
     sStr=llStringTrim(sStr,STRING_TRIM);
     string sStrLower=llToLower(sStr);
@@ -361,6 +367,8 @@ default {
                     }
                     UpdateSettings();
                 }
+            } else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
             }
             //else Debug("not my token: "+category);
         } else if (iNum == RLV_REFRESH) {   //rlvmain just started up.  Tell it about our current restrictions
@@ -371,6 +379,8 @@ default {
         else if (iNum == RLV_OFF) g_iRLVOn=FALSE;        // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_ON) g_iRLVOn=TRUE;        // rlvon -> we have to turn the menu on again
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+            
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {    //it's one of our menus
                 list lMenuParams = llParseString2List(sStr, ["|"], []);

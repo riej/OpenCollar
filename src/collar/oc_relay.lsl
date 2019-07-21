@@ -59,6 +59,9 @@ string ALL = "ALL";
 
 key g_kWearer;
 string g_sSettingsToken = "relay_";
+string g_sGlobalToken = "global_";
+
+integer g_bStrictMode;
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -488,6 +491,8 @@ CleanQueue() {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+    
     if (iNum<CMD_OWNER || iNum>CMD_WEARER || iNum==CMD_EVERYONE) return;
     if (llToLower(sStr) == "rm relay") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) RelayNotify(kID,"Access denied!",0);
@@ -636,6 +641,9 @@ default {
             else if (sToken == "auth_tempowner") g_lTempOwner = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lTrust = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_block") g_lBlock = llParseString2List(sValue, [","], []);
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         } else if (iNum == RLV_OFF) {
             g_iRLV=FALSE;
             refreshRlvListener();
@@ -647,6 +655,8 @@ default {
             refreshRlvListener();
         } else if( iNum == CMD_SAFEWORD)SafeWord();
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
