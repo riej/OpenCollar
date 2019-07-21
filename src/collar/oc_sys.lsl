@@ -116,7 +116,6 @@ integer MVANIM_ANNOUNCE = 13001;
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
 integer g_iHide ; // global hide
-integer g_iNews=TRUE;
 
 string g_sLockPrimName="Lock"; // Description for lock elements to recognize them //EB //SA: to be removed eventually (kept for compatibility)
 string g_sOpenLockPrimName="OpenLock"; // Prim description of elements that should be shown when unlocked
@@ -142,10 +141,8 @@ integer g_iUpdateFromMenu;
 
 key github_version_request;
 string g_sOtherDist;
-key news_request;
-string g_sLastNewsTime = "0";
 
-string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
+string g_sWeb = "https://raw.githubusercontent.com/riej/OpenCollar/master/web/";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
@@ -229,9 +226,7 @@ HelpMenu(key kID, integer iAuth) {
     if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
-    string sNewsButton="☐ News";
-    if (g_iNews) sNewsButton="☑ News";
-    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
+    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,"Update"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 
@@ -335,9 +330,6 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
             
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
-    } else if (sCmd == "news"){
-        llMessageLinked(LINK_DIALOG,NOTIFY, "0News is deprecated in this version", kID);
-        if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
         if (kID == g_kWearer) {
             g_iWillingUpdaters = 0;
@@ -621,8 +613,6 @@ default {
                     else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
                     else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
-                    else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
-                    else if (sMessage=="☑ News")   UserCommand(iAuth, "news off", kAv, TRUE);
                     else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
                     if (sMessage=="Yes") StartUpdate();
@@ -668,7 +658,6 @@ default {
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
             } else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
-            else if (sToken == "intern_news") g_iNews = (integer)sValue;
             else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
