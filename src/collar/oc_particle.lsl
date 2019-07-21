@@ -87,6 +87,7 @@ string g_sClassicTexture;
 //List of 4 leash/chain points, lockmeister names used (list has to be all lower case, prims dont matter, converting on compare to lower case)
 //strided list... LM name, linkNumber, BOOL_ACVTIVE
 list g_lLeashPrims;
+integer g_bAutoTp;
 
 //global integer used for loops
 integer g_iLoop;
@@ -329,6 +330,10 @@ ConfigureMenu(key kIn, integer iAuth) {
     else if (g_sParticleMode == "Classic")  lButtons += ["☒ "+L_CLASSIC_TEX,"☐ "+L_RIBBON_TEX,"☐ Invisible"];
 
     lButtons += [L_FEEL, L_COLOR];
+
+    if (g_bAutoTp) lButtons += "☑ Auto TP";
+    else lButtons += "☐ Auto TP";
+
     string sPrompt = "\n[Leash Configuration]\n\nCustomize the looks and feel of your leash.";
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"configure");
 }
@@ -492,6 +497,11 @@ default {
                             SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
                         }
                         SaveSettings("ParticleMode", g_sParticleMode, TRUE);
+                    } else if ((sButtonType == "Auto TP")) {
+                        if (sButtonCheck == "☐") g_bAutoTp = TRUE;
+                        else g_bAutoTp = FALSE;
+                        if (g_bAutoTp) llMessageLinked(LINK_THIS, iAuth, "autotp on", kAv);
+                        else llMessageLinked(LINK_THIS, iAuth, "autotp off", kAv);
                     }
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
                     else if (g_iLeashActive) StopParticles(FALSE);
@@ -563,6 +573,8 @@ default {
                     g_iStrictRank = (integer)llGetSubString(sValue,2,-1);
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
+                } else if (sToken == "autotp") {
+                    g_bAutoTp = (integer)sValue;
                 }
             } else if (sToken == g_sGlobalToken + "strict") {
                 g_bStrictMode = (integer)sValue;

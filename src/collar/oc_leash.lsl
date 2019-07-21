@@ -106,6 +106,8 @@ integer g_iTurnModeOn = FALSE;
 integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
+integer g_bAutoTp;
+integer g_bTriedTp;
 
 
 
@@ -587,6 +589,16 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
+        } else if (sMessage == "autotp on") {
+            g_bAutoTp = TRUE;
+            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "autotp=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "autotp=1", "");
+            llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "Auto-teleport enabled.", kMessageID);
+        } else if (sMessage == "autotp off") {
+            g_bAutoTp = FALSE;
+            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "autotp", "");
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "autotp=0," + (string)iAuth, kMessageID);
+            llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "Auto-teleport disabled.", kMessageID);
         }
         if(sMessage  == "give holder"){
             if(iAuth >=CMD_OWNER || iAuth <= CMD_EVERYONE){
@@ -723,6 +735,7 @@ default {
                     g_iStrictRank = (integer)llList2String(lParam, 1);
                     ApplyRestrictions();
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
+                else if (sToken == "autotp") g_bAutoTp = (integer)sValue;
             } else if (sToken == g_sGlobalToken + "strict") {
                 g_bStrictMode = (integer)sValue;
             }
@@ -846,18 +859,29 @@ default {
                 g_vPos = vNewPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-            if (g_vPos != ZERO_VECTOR){
-                // The below code was causing users to fly if the z height of the person holding the leash was different.
-                
-                
-                //vector currentPos = llGetPos();
-                //g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
+            if ((g_vPos != ZERO_VECTOR)) {
+                vector currentPos = llGetPos();
+                list lHits = llCastRay(currentPos, g_vPos, [RC_REJECT_TYPES, RC_REJECT_AGENTS, RC_MAX_HITS, 1]);
+                if (llGetListLength(lHits) > 1) {
+                    g_vPos = llList2Vector(lHits, 1);
+                    integer iMaxLen = g_iLength + 2;
+                    if (iMaxLen < 8) iMaxLen = 8;
+                    if (g_bAutoTp && g_iRLVOn && llVecDist(currentPos,vNewPos) > iMaxLen) {
+                        if (!g_bTriedTp) {
+                            g_bTriedTp = TRUE;
+                            llMessageLinked(LINK_RLV, RLV_CMD, "tpto:" + llGetRegionName() + "/" + (string)((integer)vNewPos.x) + "/" + (string)((integer)vNewPos.y) + "/" + (string)((integer)vNewPos.z) + "=force", NULL_KEY);
+                        }
+                        return;
+                    }
+                }
                 llMoveToTarget(g_vPos,1.0);
             }
             else llStopMoveToTarget();
         } else {
             DoUnleash(FALSE);
         }
+
+        g_bTriedTp = FALSE;
     }
 
     run_time_permissions(integer iPerm) {
