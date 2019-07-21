@@ -435,11 +435,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     AnimMenu(kID, iNum);
   } else if (sStr == "pose") {
     PoseMenu(kID, 0, iNum);
-  } else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
-    if (g_sCurrentPose != "") {
-      StopAnim(g_sCurrentPose);
-    }
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
   } else if (sCommand == "posture") {
     if (sValue == "on") {
       if (iNum <= CMD_EVERYONE) {

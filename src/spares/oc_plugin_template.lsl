@@ -71,10 +71,6 @@ Menu(key kID, integer iAuth) {
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llSubStringIndex(sStr,"amenu") && sStr != "menu "+g_sSubMenu) return;
-    if (iNum == CMD_OWNER && sStr == "runaway") {
-        g_lOwner = g_lTrust = g_lBlock = [];
-        return;
-    }
     if (sStr=="AMenu" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {

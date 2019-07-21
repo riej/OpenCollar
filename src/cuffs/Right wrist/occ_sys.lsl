@@ -355,7 +355,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);;
         if (fromMenu) MainMenu(kID, iNum);
-    } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
+    } else if (sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
         if (iNum == CMD_OWNER)  {
             g_iLocked = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");

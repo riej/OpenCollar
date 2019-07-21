@@ -282,10 +282,7 @@ SafeWord(key kID) {
 
 UserCommand(integer iNum, string sStr, key kID) {
     sStr = llToLower(sStr);
-    if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
-        llSleep(2); //give some time for scripts to get ready.
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
-    } else if (sStr == "rlv" || sStr == "menu rlv" ){
+    if (sStr == "rlv" || sStr == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
     } else if (sStr == "rlv on") {

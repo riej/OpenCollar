@@ -203,9 +203,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         ShowHideTitle();
     } else if (sCommand=="titler" && sAction == "box")
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
-    else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
-        UserCommand(CMD_OWNER,"title off", g_kWearer);
-    } else if (sCommand == "image") {
+    else if (sCommand == "image") {
         
         if(g_sParticle == "" && g_iOn==FALSE) g_iLastRank = CMD_EVERYONE; 
         if(iAuth > g_iLastRank){

@@ -368,9 +368,6 @@ default {
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        } else if(iNum == CMD_OWNER && sStr == "runaway") {
-            llSleep(4);
-            SetBellElementAlpha();
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;

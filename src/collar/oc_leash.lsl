@@ -474,8 +474,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 //LeashTo((key)sVal, kMessageID, iAuth, [], TRUE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
-        } else if (sMessage == "runaway" && iAuth == CMD_OWNER) {
-            Unleash(kMessageID);
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);

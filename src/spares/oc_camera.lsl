@@ -334,9 +334,6 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
     } else if (sStr == "rm camera") {
             if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmcamera");
-    } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
-        ClearCam();
-        //llResetScript();
     }
    // Debug(sCommand+" executed");
 }

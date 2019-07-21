@@ -28,7 +28,6 @@ integer g_iGroupEnabled = FALSE;
 
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
-integer g_iRunawayDisable=0;
 
 string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
 
@@ -143,7 +142,7 @@ AuthMenu(key kAv, integer iAuth) {
     if (g_iOwnSelf) lButtons += g_sFlavor+" ☑";    //add wearer as owner
     else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
-    lButtons += ["Runaway","Access List"];
+    lButtons += [" ","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
 }
 
@@ -554,18 +553,6 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to limit range",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
-    } else if (sMessage == "runaway"){
-       // list lButtons=[];
-      // string message;//="\nOnly the wearer or an Owner can access this menu";
-        if (kID == g_sWearerID){  //wearer called for menu
-            if (g_iRunawayDisable)
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to runaway",kID);
-            else {
-                Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu",FALSE);
-                return;
-            }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This feature is only for the wearer of the %DEVICETYPE%.",kID);
-        if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "flavor") {
         if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to change flavor",kID);
         else if (sAction) {
@@ -579,23 +566,6 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
 DeleteAndResend(string sToken){
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken+sToken+"=",""); //// LEGACY OPTION. New scripts will hear LM_SETTING_DELETE
     llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+sToken,"");
-}
-RunAway() {
-    llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
-    list lOpts = ["owner","tempowner","trust","block", "group", "public"];
-    integer i=0;
-    integer end=llGetListLength(lOpts);
-    for(i=0;i<end;i++){
-        DeleteAndResend(llList2String(lOpts,i));
-    }
-    
-    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "GLOBAL_locked=","");
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "GLOBAL_locked","");
-    // moved reset request from settings to here to allow noticifation of owners.
-    llMessageLinked(LINK_ALL_OTHERS, CMD_OWNER, "clear", g_sWearerID);
-    llMessageLinked(LINK_ALL_OTHERS, CMD_OWNER, "runaway", g_sWearerID); // this is not a LM loop, since it is now really authed
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway finished.",g_sWearerID);
-    llResetScript();
 }
 list g_lRequests;
 default {
@@ -621,14 +591,7 @@ default {
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
             integer iAuth = Auth(kID);
-            if ( kID == g_sWearerID && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
-                if (g_iRunawayDisable)
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway is currently disabled.",g_sWearerID);
-                else
-                    UserCommand(iAuth,"runaway",kID, FALSE);
-            } else if (iAuth == CMD_OWNER && sStr == "runaway")
-                UserCommand(iAuth, "runaway", kID, FALSE);
-            else llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            llMessageLinked(LINK_SET, iAuth, sStr, kID);
             //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
             return; // NOAUTH messages need go no further
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
@@ -658,7 +621,6 @@ default {
                 }
                 else if (sToken == "public") g_iOpenAccess = (integer)sValue;
                 else if (sToken == "limitrange") g_iLimitRange = (integer)sValue;
-                else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
                 else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "flavor") g_sFlavor = sValue;
@@ -715,8 +677,7 @@ default {
                             "Public ☑","public off",
                             g_sFlavor+" ☐","ownself on",
                             g_sFlavor+" ☑","ownself off",
-                            "Access List","list",
-                            "Runaway","runaway"
+                            "Access List","list"
                           ];
                         integer buttonIndex=llListFindList(lTranslation,[sMessage]);
                         if (~buttonIndex)
@@ -729,10 +690,6 @@ default {
                     if (sMessage == UPMENU)
                         AuthMenu(kAv, iAuth);
                     else UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
-                } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
-                    if (sMessage == "Yes") RunAway();
-                    else if (sMessage == UPMENU) AuthMenu(kAv, iAuth);
-                    else if (sMessage == "No") llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway aborted.",kAv);
                 } if (llSubStringIndex(sMenu,"AddAvi") == 0) {
                     if ((key)sMessage)
                         AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
@@ -774,7 +731,6 @@ default {
             DebugOutput(kID, [" OWN SELF:", g_iOwnSelf]);
             DebugOutput(kID, [" OPEN ACCESS:",g_iOpenAccess]);
             DebugOutput(kID, [" FIRST RUN:",g_iFirstRun]);
-            DebugOutput(kID, [" DISABLE RUNAWAY:", g_iRunawayDisable]);
             DebugOutput(kID, [" GROUP:", g_iGroupEnabled]);
         }
     }

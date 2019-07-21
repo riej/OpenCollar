@@ -245,7 +245,7 @@ default{
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(iSender, MENUNAME_RESPONSE, "Main|Capture", "");
-        else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
+        else if (iNum == CMD_SAFEWORD) {
             if (iNum == CMD_SAFEWORD && g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Capture Mode deactivated.", g_kWearer);
             if (llGetAgentSize(g_sTempOwnerID)) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your capture role play with %WEARERNAME% is over.",g_sTempOwnerID);
             g_iCaptureOn=FALSE;

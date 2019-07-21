@@ -311,7 +311,6 @@ UserCommand(integer iAuth, string sStr, key kID) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo hide the storage prim again type:\n\n/%CHANNEL% %PREFIX% hide storage\n",kID);
     } else if (sStrLower == "hide storage")
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
-    else if (sStrLower == "runaway") llSetTimerEvent(2.0);
 }
 
 

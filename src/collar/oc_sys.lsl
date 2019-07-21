@@ -308,7 +308,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to lock",kID);;
         if (fromMenu) MainMenu(kID, iNum);
-    } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
+    } else if (sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
         if(g_iCaptureIsActive){
             llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
             return;

@@ -117,9 +117,8 @@ default
         string sMsg1 = llList2String(lParams, 1);
         if (iNum == MENUNAME_REQUEST && sMsg == parentmenu)//adds us to the apps menu**
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
-        if ((iNum == COMMAND_OWNER) && (sMsg == "runaway"))
-            llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":runaway"); //ok full runaway seen!**
-        else if (sMsg == "menu " + submenu)//lets give our menu**
+        
+        if (sMsg == "menu " + submenu)//lets give our menu**
             DoMenu(kID);
         else if ((sMsg1 =="LOCK") && (iNum == DIALOG_RESPONSE))//Lock our cuffs with the collar**
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "C_lock=1", NULL_KEY);

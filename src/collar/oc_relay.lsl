@@ -495,10 +495,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
     if (llSubStringIndex(sStr,"relay") && sStr != "menu "+g_sSubMenu) return;
-    if (iNum == CMD_OWNER && sStr == "runaway") {
-        g_lOwner = g_lTrust = g_lBlock = [];
-        return;
-    }
     if (!g_iRLV) {
         llMessageLinked(LINK_RLV, iNum, "menu RLV", kID);
         llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
