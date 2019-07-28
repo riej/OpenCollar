@@ -277,6 +277,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (sCmd == "menu") {
             string sSubmenu = llToLower(llList2String(lParams, 1));
             if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
+        } else if (sCmd == "fix") {
+            RebuildMenu(fromMenu, kID, iNum);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         }
 
         return;
