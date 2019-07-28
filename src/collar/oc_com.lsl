@@ -83,7 +83,7 @@ key g_kWearer;
 string g_sGlobalToken = "global_";
 string g_sDeviceName;
 string g_sWearerName;
-//list g_lOwners;
+list g_lOwners;
 
 //globlals for supporting touch requests
 list g_lTouchRequests; // 4-strided list in form of touchid, recipient, flags, auth level
@@ -167,8 +167,9 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     }
     if (sType == "touchstart") {
         llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer)
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your %DEVICETYPE%.\n",g_kWearer);
+        if (g_iTouchNotify && llListFindList(g_lOwners, [(string)kToucher]) < 0) {
+            llMessageLinked(LINK_DIALOG, NOTIFY_OWNERS, "\n\n" + NameURI(kToucher) + " touched %WEARERNAME%'s collar.\n", "");
+        }
     }
 }
 
@@ -504,6 +505,8 @@ default {
                 if (g_iPublicListenChan == TRUE) g_iPublicListener = llListen(0, "", NULL_KEY, "");
                 llListenRemove(g_iPrivateListener);
                 g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
+            } else if ((sToken == "auth_owner")) {
+                g_lOwners = llParseString2List(sValue, [","], []);
             }
         } else if (iNum == TOUCH_REQUEST) {   //str will be pipe-delimited list with rcpt|flags|auth
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
