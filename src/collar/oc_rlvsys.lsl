@@ -111,6 +111,11 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
+    if (g_bStrictMode && iAuth == CMD_WEARER) {
+        llMessageLinked(LINK_SET, iAuth, "menu", kID);
+        return;
+    }
+
     key kMenuID = llGenerateKey();
     string sPrompt = "\n[Remote Scripted Viewer Controls]\n";
     if (g_iRlvActive) {
