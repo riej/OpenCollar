@@ -19,6 +19,7 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvtp_","showworldmap","Map","View World-map",
     "rlvtp_","showminimap","Mini-map","View Mini-map",
     "rlvtp_","showloc","Location","See current location",
+
     "rlvtalk_","sendchat","Chat","Ability to Chat",
     "rlvtalk_","chatshout","Shout","Ability to Shout",
     "rlvtalk_","chatnormal","Whisper","Forced to Whisper",
@@ -28,22 +29,33 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvtalk_","recvchat","See Chat","Receive Chat",
     "rlvtalk_","recvemote","See Emote","Receive Emotes",
     "rlvtalk_","emote","Emote","Short Emotes if Chat blocked",
+
     "rlvtouch_","fartouch","Far","Touch objects >1.5m away",
     "rlvtouch_","touchworld","World","Touch in-world objects",
     "rlvtouch_","touchattach","Self","Touch your attachments",
     "rlvtouch_","touchattachother","Others","Touch others' attachments",
-    "rlvmisc_","shownames","Names","See Avatar Names",
-    "rlvmisc_","fly","Fly","Ability to Fly",
-    "rlvmisc_","edit","Edit","Edit Objects",
-    "rlvmisc_","rez","Rez","Rez Objects",
-    "rlvmisc_","showinv","Inventory","View Inventory",
-    "rlvmisc_","viewnote","Notecards","View Notecards",
-    "rlvmisc_","viewscript","Scripts","View Scripts",
-    "rlvmisc_","viewtexture","Textures","View Textures",
+
+    "rlvmisc_","shownames","Names","See avatar names",
+    "rlvmisc_","shownametags","Name Tags","See avatar name tags",
     "rlvmisc_","showhovertextworld","Hovertext","See hovertext like titles",
+    "rlvmisc_","group","Group","Change group",
+
+    "rlvinv_","edit","Edit","Edit Objects",
+    "rlvinv_","rez","Rez","Rez Objects",
+    "rlvinv_","showinv","Inventory","View Inventory",
+    "rlvinv_","viewnote","Notecards","View Notecards",
+    "rlvinv_","viewscript","Scripts","View Scripts",
+    "rlvinv_","viewtexture","Textures","View Textures",
+
     "rlvview_","camdistmax:0","Mouselook","Leave Mouselook",
     "rlvview_","camunlock","Alt Zoom","Alt zoom/pan around",
-    "rlvview_","camdrawalphamax:1","See","See anything at all"
+    "rlvview_","camdrawalphamax:1","See","See anything at all",
+    "rlvview_","camtextures","Textures","Show textures in-world",
+    "rlvview_","camavdist","Avatars","Show avatars",
+
+    "rlvmove_","fly","Fly","Ability to fly",
+    "rlvmove_","temprun","Run","Ability to run",
+    "rlvmove_","alwaysrun","Always Run","Ability to always run"
 ];
 
 list g_lMenuHelpMap = [
@@ -51,8 +63,10 @@ list g_lMenuHelpMap = [
     "rlvtp_","Travel",
     "rlvtalk_","Talk",
     "rlvtouch_","Touch",
+    "rlvinv_","Inventory/edit",
     "rlvmisc_","Misc",
-    "rlvview_","View"
+    "rlvview_","View",
+    "rlvmove_","Move"
 ];
 
 string TURNON = "✔";
