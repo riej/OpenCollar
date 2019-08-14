@@ -365,7 +365,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "update") {
-        if (iNum == CMD_OWNER || (kID == g_kWearer && !g_bStrictMode)) {
+        if (iNum == CMD_OWNER) {
             g_iWillingUpdaters = 0;
             g_kCurrentUser = kID;
             g_iUpdateAuth = iNum;
