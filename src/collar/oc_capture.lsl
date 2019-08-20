@@ -59,7 +59,9 @@ integer g_iRiskyOn     = FALSE;     // true means captor confirms, false means w
 integer g_iCaptureOn        = FALSE;     // on/off toggle for the app.  Switching off clears tempowner list
 integer g_iCaptureInfo = TRUE;
 string  g_sSettingToken     = "capture_";
-//string  g_sGlobalToken      = "global_";
+string  g_sGlobalToken      = "global_";
+
+integer g_bStrictMode;
 
 /*
 integer g_iProfiled;
@@ -141,6 +143,8 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
 }
 
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
+    if (g_bStrictMode && iNum == CMD_WEARER) return;
+
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
         string sCaptorID = llGetSubString(sStr,llSubStringIndex(sStr,"~")+1,-1);
@@ -263,8 +267,13 @@ default{
             else if (sToken == g_sSettingToken+"risky") g_iRiskyOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_sTempOwnerID = sValue; //store tempowner
             else if (sToken == g_sSettingToken+"info") g_iCaptureInfo = (integer)sValue;
+            else if (sToken == g_sGlobalToken + "strict") {
+                g_bStrictMode = (integer)sValue;
+            }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
+
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);

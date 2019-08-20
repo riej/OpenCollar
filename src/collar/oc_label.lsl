@@ -467,7 +467,7 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == DIALOG_RESPONSE) {
-            if (g_bStrictMode && iNum == CMD_OWNER) return;
+            if (g_bStrictMode && iNum == CMD_WEARER) return;
 
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
