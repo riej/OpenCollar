@@ -38,7 +38,7 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvmisc_","shownames","Names","See avatar names",
     "rlvmisc_","shownametags","Name Tags","See avatar name tags",
     "rlvmisc_","showhovertextworld","Hovertext","See hovertext like titles",
-    "rlvmisc_","group","Group","Change group",
+    "rlvmisc_","setgroup","Group","Change group",
 
     "rlvinv_","edit","Edit","Edit Objects",
     "rlvinv_","rez","Rez","Rez Objects",
