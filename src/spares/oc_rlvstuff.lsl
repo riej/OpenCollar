@@ -154,7 +154,13 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 }
 
 StuffMenu(key kID, integer iAuth) {
-    Dialog(kID, "\n[Legacy RLV Stuff]\t"+g_sAppVersion, ["Misc","Touch","Talk","Travel","View"], [UPMENU], 0, iAuth, "rlvstuff");
+    list lButtons = [];
+    integer iLength = llGetListLength(g_lMenuHelpMap);
+    integer i = 1;
+    for (; i < iLength; i += 2) {
+        lButtons += llList2String(g_lMenuHelpMap, i);
+    }
+    Dialog(kID, "\n[Legacy RLV Stuff]\t"+g_sAppVersion, lButtons, [UPMENU], 0, iAuth, "rlvstuff");
 }
 
 Menu(key kID, integer iAuth, string sMenuName) {
