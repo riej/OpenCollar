@@ -74,8 +74,8 @@ list g_lTempTrustObj;
 list g_lTempBlockObj;
 list g_lTempTrustUser;
 list g_lTempBlockUser;
-list g_lTrustObj; // 2-strided list uuid,name
-list g_lBlockObj; // 2-strided list uuid,name
+list g_lTrustObj; // list uuid
+list g_lBlockObj; // list uuid
 list g_lTrustAv; // keys stored as string since strings is what you get when restoring settings
 list g_lBlockAv; // same here (this fixes issue 1253)
 
@@ -106,8 +106,6 @@ integer g_iLandMode = 0;
 integer g_iLiteMode = 0;
 
 integer g_iSmartStrip = TRUE; // Convert @remoutfit to @detachallthis.
-
-key g_kDebugRcpt = NULL_KEY; // recipient key for relay chat debugging (useful since you cannot eavesdrop llRegionSayTo)
 
 /*
 integer g_iProfiled;
@@ -147,29 +145,29 @@ RelayNotify(key kID, string sMessage, integer iNofityWearer) {
     }
     llSetObjectName(sObjectName);
 }
-/*
+
 SaveTrustObj()
 {
-    if (llGetListLength(g_lTrustObj) > 0)
+    if (g_lTrustObj)
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"trustobj=" + llDumpList2String(g_lTrustObj,","), "");
     else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"trustobj", "");
 }
 
 SaveBlockObj()
 {
-    if (llGetListLength(g_lBlockObj) > 0)
+    if (g_lBlockObj)
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"blockobj=" + llDumpList2String(g_lBlockObj,","), "");
     else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"blockobj", "");
 }
-*/
+
 SaveTrustAv() {
-    if (llGetListLength(g_lTrustAv) > 0)
+    if (g_lTrustAv)
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"trustav=" + llDumpList2String(g_lTrustAv,","), "");
     else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"trustav", "");
 }
 
 SaveBlockAv() {
-    if (llGetListLength(g_lBlockAv) > 0)
+    if (g_lBlockAv)
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"blockav="+llDumpList2String(g_lBlockAv,",") , "");
     else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"blockav", "");
 }
@@ -321,8 +319,6 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
 
 sendrlvr(string sIdent, key kID, string sCom, string sAck) {
     llRegionSayTo(kID, RELAY_CHANNEL, sIdent+","+(string)kID+","+sCom+","+sAck);
-    if (g_kDebugRcpt == g_kWearer) llOwnerSay("From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
-    else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
 }
 integer g_iWaitTarget=-1; // Default is -1, if this value is anything but -1, wait until unix time is greater than the target and reset it to -1, during wait time, no restrictions should be accepted. Infact the relay should be on pause mode, and not acknowledge any requests to it.
 SafeWord() {
@@ -346,39 +342,44 @@ SafeWord() {
 
 }
 
+string Checkbox(integer bChecked, string sLabel) {
+    if (bChecked) return "☒ " + sLabel;
+    else return "☐ " + sLabel;
+}
+
 //----Menu functions section---//
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Relay]";
-    list lButtons = ["☐ Trusted","☐ Ask","☐ Auto"];
-    if (g_iBaseMode == 1){
-        lButtons = ["☒ Trusted","☐ Ask","☐ Auto"];
-        sPrompt += " is set to trusted mode.";
+    list lButtons = [
+        Checkbox(g_iBaseMode == 1, "Trusted"),
+        Checkbox(g_iBaseMode == 2, "Ask"),
+        Checkbox(g_iBaseMode == 3, "Auto"),
+
+        Checkbox(g_iLiteMode, "Lite"),
+        Checkbox(g_iSmartStrip, "Smart"),
+        Checkbox(g_iLandMode, "Land"),
+
+        "Pending",
+        "Sources",
+        "Access Lists",
+
+        Checkbox(g_iHelpless, "Helpless")
+    ];
+
+    if (!g_iHelpless) lButtons += "SAFEWORD";
+
+    if (g_lSources) {
+        integer iLength = llGetListLength(g_lSources);
+
+        sPrompt += "\n\nCurrently grabbed by " + (string)iLength + " source";
+        if (iLength == 1) sPrompt += "s";
+        sPrompt += ".";
     }
-    else if (g_iBaseMode == 2){
-        lButtons = ["☐ Trusted","☒ Ask","☐ Auto"];
-        sPrompt += " is set to ask mode.";
+
+    if (g_lQueue) {
+        sPrompt += "\n\nYou have a pending request.";
     }
-    else if (g_iBaseMode == 3){
-        lButtons = ["☐ Trusted","☐ Ask","☒ Auto"];
-        sPrompt += " is set to auto mode.";
-    }
-    else sPrompt += " is offline.";
-    if (g_iLiteMode) lButtons+=["☑ Lite"];
-    else lButtons+=["☐ Lite"];
-    if (g_iSmartStrip) lButtons+=["☑ Smart"];
-    else lButtons+=["☐ Smart"];
-    if (g_iLandMode) lButtons+=["☑ Land"];
-    else lButtons+=["☐ Land"];
-    lButtons+=["Pending","Sources","Access Lists"];
-    if (g_iHelpless) lButtons+=["☑ Helpless"];
-    else lButtons+=["☐ Helpless"];
-    if (!g_iHelpless) lButtons+=["SAFEWORD"];
-    if (g_lSources!=[]) {
-        sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" source";
-        if (g_lSources==[1]) sPrompt+="."; // Note: only list LENGTH is compared here
-        else sPrompt+="s.";
-    }
-    if (g_lQueue!=[]) sPrompt+="\n\nYou have a pending request.";
+    
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
@@ -398,10 +399,10 @@ ListsMenu(key kID, string sMsg, integer iAuth) {
     list lButtons;
     string sPrompt;
     if (sMsg == "Trust Objects") {
-        lButtons = llList2ListStrided(llDeleteSubList(g_lTrustObj,0,0), 0, -1, 2);
+        lButtons = g_lTrustObj;
         sPrompt = "\nWhat object do you want to stop trusting?";
     } else if (sMsg == "Block Objects") {
-        lButtons = llList2ListStrided(llDeleteSubList(g_lBlockObj,0,0), 0, -1, 2);
+        lButtons = g_lBlockObj;
         sPrompt = "\nWhat object do you want not to block anymore?";
     } else if (sMsg == "Trust Avatars") {
         lButtons = g_lTrustAv;
@@ -426,9 +427,9 @@ RemoveList(string sMsg, integer iAuth, string sListType) {
         if (sMsg == ALL) g_lBlockObj = [];
         else {
             i = llListFindList(g_lBlockObj,[sMsg]);
-            if (i!=-1) g_lBlockObj = llDeleteSubList(g_lBlockObj,i-1,i);
+            if (i!=-1) g_lBlockObj = llDeleteSubList(g_lBlockObj,i,i);
         }
-        //SaveBlockObj();
+        SaveBlockObj();
     } else if (iAuth==CMD_WEARER && g_iMinBaseMode > 0) {
         RelayNotify(g_kWearer,"Access denied!",0);
         return;
@@ -436,9 +437,9 @@ RemoveList(string sMsg, integer iAuth, string sListType) {
         if (sMsg == ALL) g_lTrustObj = [];
         else {
             i = llListFindList(g_lTrustObj,[sMsg]);
-            if (i!=-1) g_lTrustObj = llDeleteSubList(g_lTrustObj,i-1,i);
+            if (i!=-1) g_lTrustObj = llDeleteSubList(g_lTrustObj,i,i);
         }
-        //SaveTrustObj();
+        SaveTrustObj();
     } else if (sListType == "Trust Avatars") {
         if (sMsg == ALL) g_lTrustAv = [];
         else {
@@ -506,15 +507,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else if ((sStr=llGetSubString(sStr,6,-1))=="safeword") SafeWord(); // cut "relay " off sStr
-    else if (sStr=="getdebug") {
-        g_kDebugRcpt = kID;
-        RelayNotify(kID,"/me messages will be forwarded to "+NameURI(kID)+".",1);
-        return;
-    } else if (sStr=="stopdebug") {
-        g_kDebugRcpt = NULL_KEY;
-        RelayNotify(kID,"/me messages won't forwarded anymore.",1);
-        return;
-    } else if (sStr=="pending") {
+    else if (sStr=="pending") {
         if (g_lQueue != []) Dequeue();
         else {
             RelayNotify(kID,"There are no pending requests.",0);
@@ -597,16 +590,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
-DebugOutput(key kID, list ITEMS){
-    integer i=0;
-    integer end=llGetListLength(ITEMS);
-    string final;
-    for(i=0;i<end;i++){
-        final+=llList2String(ITEMS,i)+" ";
-    }
-    llInstantMessage(kID, llGetScriptName() +final);
-}
-
 default {
     on_rez(integer iNum) {
         if (llGetOwner() != g_kWearer) llResetScript();
@@ -635,8 +618,8 @@ default {
             if (sToken == g_sSettingsToken+"mode") UpdateMode((integer)sValue);
             else if (sToken==g_sSettingsToken+"trustav") g_lTrustAv = llParseString2List(sValue, [","], []);
             else if (sToken==g_sSettingsToken+"blockav") g_lBlockAv = llParseString2List(sValue, [","], []);
-           // else if (sToken==g_sSettingsToken+"trustobj") g_lTrustObj = llParseString2List(sValue, [","], []);
-           // else if (sToken==g_sSettingsToken+"blockobj") g_lBlockObj = llParseString2List(sValue, [","], []);
+            else if (sToken==g_sSettingsToken+"trustobj") g_lTrustObj = llParseString2List(sValue, [","], []);
+            else if (sToken==g_sSettingsToken+"blockobj") g_lBlockObj = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_owner") g_lOwner = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_tempowner") g_lTempOwner = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lTrust = llParseString2List(sValue, [","], []);
@@ -710,12 +693,12 @@ default {
                         if (kUser) g_lTempBlockUser+=[(string)kUser];
                     } else if (sMsg=="Trust Object") {
                         if (!~llListFindList(g_lTrustObj, [kCurID]))
-                            g_lTrustObj+=[kCurID,llKey2Name(kCurID)];
-                            //SaveTrustObj();
+                            g_lTrustObj+=(string)kCurID;
+                            SaveTrustObj();
                     } else if (sMsg=="Block Object") {
                         if (!~llListFindList(g_lBlockObj, [kCurID]))
-                            g_lBlockObj+=[kCurID,llKey2Name(kCurID)];
-                            //SaveBlockObj();
+                            g_lBlockObj+=(string)kCurID;
+                            SaveBlockObj();
                     } else if (sMsg=="Trust Owner") {
                         if (!~llListFindList(g_lTrustAv, [(string)kOwner])) {
                             g_lTrustAv+=[(string)kOwner];
@@ -769,11 +752,6 @@ default {
             if(sStr == "ver")onlyver=1;
             llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
             if(onlyver)return; // basically this command was: <prefix> versions
-            
-            DebugOutput(kID, [" SOURCES:"]+g_lSources);
-            DebugOutput(kID, [" AUTH PENDING:", g_iAuthPending]);
-            
-            
         }
     }
 
@@ -813,8 +791,6 @@ default {
         if (llList2Key(lArgs,1)!=g_kWearer && llList2String(lArgs,1)!="ffffffff-ffff-ffff-ffff-ffffffffffff") return; // allow FFF...F wildcard
         string sIdent=llList2String(lArgs,0);
         sMsg=llToLower(llList2String(lArgs,2));
-        if (g_kDebugRcpt == g_kWearer) llOwnerSay("To relay: "+sIdent+","+sMsg);
-        else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "To relay: "+sIdent+","+sMsg);
         if (sMsg == "!pong") {
         //sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
             llMessageLinked(LINK_SET, CMD_RLV_RELAY, "ping,"+(string)g_kWearer+",!pong", kID);
