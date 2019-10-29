@@ -207,7 +207,7 @@ integer LabelsCount() {
 
     //find all 'Label' prims and count it's
     for(iLink=2; iLink <= iLinkCount; iLink++) {
-        sLabel = llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0);
+        sLabel = llGetLinkName(iLink);
         lTmp = llParseString2List(sLabel, ["~"],[]);
         sLabel = llList2String(lTmp,0);
         if(sLabel == "Label") {
@@ -219,7 +219,7 @@ integer LabelsCount() {
     g_iCharLimit = llGetListLength(g_lLabelLinks);
     //find all 'Label' prims and store it's links to list
     for(iLink=2; iLink <= iLinkCount; iLink++) {
-        sLabel = llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0);
+        sLabel = llGetLinkName(iLink);
         lTmp = llParseString2List(sLabel, ["~"],[]);
         sLabel = llList2String(lTmp,0);
         if(sLabel == "Label") {
